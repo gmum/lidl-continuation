@@ -173,3 +173,13 @@ if not (args.neptune_name is None or args.neptune_token is None):
 
 
 print("\n".join(map(str, results)), file=report_file)
+
+if data.shape[1] in {2, 3}:
+    assert len(data.shape) == 2
+    print("Saving figure...")
+    figure_filename.parent.mkdir(exist_ok=True, parents=True)
+
+    mappable = plt.scatter(data[:, 0], data[:, 1], c=results, alpha=0.5)
+    plt.colorbar(mappable, shrink=0.7, vmin=0)
+    plt.axis('scaled')
+    plt.savefig(figure_filename, facecolor='white')
