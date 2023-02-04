@@ -7,7 +7,7 @@ from collections import defaultdict
 
 def extract_datasets(filenames):
     result = list()
-    dataset_pattern = re.compile(r'.*dataset:([^_]*)_.*')
+    dataset_pattern = re.compile(r".*dataset:([^_]*)_.*")
     for filename in filenames:
         matches = dataset_pattern.findall(filename)
         if len(matches) == 1:
@@ -29,10 +29,11 @@ def print_table(results, rownames, colnames, row_width=20):
             value = results[((rowname, colname))]
             s_value = str(value)
             if len(s_value) > row_width:
-                s_value = s_value[:row_width-3] + "..."
-            print(f'{s_value:>{row_width}}', end=" ")
+                s_value = s_value[: row_width - 3] + "..."
+            print(f"{s_value:>{row_width}}", end=" ")
         print()
     print("-----------------------------")
+
 
 from os import listdir
 from os.path import isfile, join
@@ -43,7 +44,9 @@ parser.add_argument("--files", type=argparse.FileType("r"), nargs="+")
 parser.add_argument("--dir", type=str, default=None)
 args = parser.parse_args()
 if args.dir is not None:
-    filenames = [join(args.dir, f) for f in listdir(args.dir) if isfile(join(args.dir, f))]
+    filenames = [
+        join(args.dir, f) for f in listdir(args.dir) if isfile(join(args.dir, f))
+    ]
 elif args.files is not None:
     filenames = [f.name.strip() for f in args.files]
 
@@ -51,12 +54,15 @@ datasets = np.unique(extract_datasets(filenames))
 algorithms = "mle mle-inv corrdim gm maf rqnsf".split()
 
 counter = defaultdict(lambda: 0)
-experiment_results = defaultdict(lambda: 'empty')
+experiment_results = defaultdict(lambda: "empty")
 for dataset in datasets:
     for algorithm in algorithms:
         matched_files = list()
         for filename in filenames:
-            if f'algorithm:{algorithm}_' in filename and f'dataset:{dataset}_' in filename:
+            if (
+                f"algorithm:{algorithm}_" in filename
+                and f"dataset:{dataset}_" in filename
+            ):
                 matched_files.append(filename)
 
         if len(matched_files) == 0:
@@ -77,12 +83,12 @@ for dataset in datasets:
             result = f"{s_mean}\u00B1{s_std}"
             experiment_results[(dataset, algorithm)] = result
         except Exception as e:
-            experiment_results[(dataset, algorithm)] = 'error'
-            counter[(dataset, algorithm)] = 'X'
+            experiment_results[(dataset, algorithm)] = "error"
+            counter[(dataset, algorithm)] = "X"
 
 
 print("Results")
 print_table(experiment_results, datasets, algorithms)
 
-print('Number of files used to estimate the values above:')
+print("Number of files used to estimate the values above:")
 print_table(counter, datasets, algorithms, row_width=9)

@@ -112,13 +112,14 @@ def lollipop_dataset(bs, seed=0):
     r = np.random.uniform(size=cs)
     fi = np.random.uniform(0, 2 * np.pi, size=cs)
     x = np.zeros((bs, 2))
-    x[:cs, 0] = r ** 0.5 * np.sin(fi)
-    x[:cs, 1] = r ** 0.5 * np.cos(fi)
+    x[:cs, 0] = r**0.5 * np.sin(fi)
+    x[:cs, 1] = r**0.5 * np.cos(fi)
     x += 2
     stick = np.random.uniform(high=2 - 1 / np.sqrt(2), size=(bs - cs))
     x[cs:, 0] = stick
     x[cs:, 1] = stick
     return x
+
 
 def lollipop_dataset_0(bs, seed=0):
     np.random.seed(seed)
@@ -127,13 +128,13 @@ def lollipop_dataset_0(bs, seed=0):
     r = np.random.uniform(size=cs)
     fi = np.random.uniform(0, 2 * np.pi, size=cs)
     x = np.zeros((bs, 2))
-    x[:cs, 0] = r ** 0.5 * np.sin(fi)
-    x[:cs, 1] = r ** 0.5 * np.cos(fi)
+    x[:cs, 0] = r**0.5 * np.sin(fi)
+    x[:cs, 1] = r**0.5 * np.cos(fi)
     x += 2
     stick = np.random.uniform(high=2 - 1 / np.sqrt(2), size=(cp - cs))
     x[cs:cp, 0] = stick
     x[cs:cp, 1] = stick
-    x[cp:] = np.random.normal(loc=(-.5, -.5), scale=1e-3, size=(bs-cp, 2))
+    x[cp:] = np.random.normal(loc=(-0.5, -0.5), scale=1e-3, size=(bs - cp, 2))
     x = np.concatenate([x, np.zeros((x.shape[0], 1))], axis=1)
     return x
 
@@ -145,16 +146,15 @@ def lollipop_dataset_0_dense_head(bs, seed=0):
     r = np.random.uniform(size=cs)
     fi = np.random.uniform(0, 2 * np.pi, size=cs)
     x = np.zeros((bs, 2))
-    x[:cs, 0] = r ** 0.5 * np.sin(fi)
-    x[:cs, 1] = r ** 0.5 * np.cos(fi)
+    x[:cs, 0] = r**0.5 * np.sin(fi)
+    x[:cs, 1] = r**0.5 * np.cos(fi)
     x += 2
     stick = np.random.uniform(high=2 - 1 / np.sqrt(2), size=(cp - cs))
     x[cs:cp, 0] = stick
     x[cs:cp, 1] = stick
-    x[cp:] = np.random.normal(loc=(-.5, -.5), scale=1e-3, size=(bs-cp, 2))
+    x[cp:] = np.random.normal(loc=(-0.5, -0.5), scale=1e-3, size=(bs - cp, 2))
     x = np.concatenate([x, np.zeros((x.shape[0], 1))], axis=1)
     return x
-
 
 
 def uniform_helix_r3(bs, seed=0):
@@ -197,13 +197,13 @@ def uniform_N(N, bs, seed=0):
 
 def uniform_N_0_1(N, bs, seed=0):
     np.random.seed(seed)
-    return np.random.uniform(low=0., high=1., size=(bs, N))
+    return np.random.uniform(low=0.0, high=1.0, size=(bs, N))
 
 
 def sphere_7(bs, seed=0):
     np.random.seed(seed)
     x = np.random.normal(size=(bs, 8))
-    lam = np.sqrt(np.sum(x ** 2, axis=1, keepdims=True))
+    lam = np.sqrt(np.sum(x**2, axis=1, keepdims=True))
     x = x / lam
     return x
 
@@ -229,7 +229,7 @@ def sin(bs, seed=0):
 def sin_freq(bs, freq=5, seed=0):
     np.random.seed(seed)
     x = np.random.uniform(0, 1, bs)
-    return np.stack([x, np.sin(freq*x*(2 * np.pi))], axis=1)
+    return np.stack([x, np.sin(freq * x * (2 * np.pi))], axis=1)
 
 
 def sin_quant(bs, seed=0):
@@ -264,16 +264,23 @@ def generate_datasets(seed, size):
 def sin_dens(bs, freq=5, offset=2.1, seed=0):
     def fun(x, y, freq, offset):
         return np.cos(freq * x) + np.cos(freq * y) + offset
+
     np.random.seed(seed)
-    sample = np.random.rand(10*bs, 3) * np.array([[2*np.pi, 2*np.pi, offset + 2]]) + np.array([[-np.pi, -np.pi, 0]])
-    resampled = np.array([[point[0], point[1]]
-                          for point in sample
-                          if point[2] < fun(point[0], point[1], freq, offset)
-                         ])
+    sample = np.random.rand(10 * bs, 3) * np.array(
+        [[2 * np.pi, 2 * np.pi, offset + 2]]
+    ) + np.array([[-np.pi, -np.pi, 0]])
+    resampled = np.array(
+        [
+            [point[0], point[1]]
+            for point in sample
+            if point[2] < fun(point[0], point[1], freq, offset)
+        ]
+    )
     assert len(resampled) >= bs
     resampled = resampled[:bs]
     resampled = np.concatenate([resampled, np.zeros_like(resampled)], axis=1)
     return resampled
+
 
 def csv_dataset(path):
     df = pd.read_csv(path, header=None, delim_whitespace=True)

@@ -1,5 +1,6 @@
 import datasets
 
+# fmt: off
 inputs = {
     "uniform-1": lambda size, seed: datasets.uniform_N(1, size, seed=seed),
     "uniform-10": lambda size, seed: datasets.uniform_N(10, size, seed=seed),
@@ -95,5 +96,5 @@ inputs = {
     "year": lambda size, seed: datasets.csv_dataset(
         # path to year_prediction_msd dataset here
         "~/datasets/year_prediction_msd.txt"
-    )
+    ),
 }
