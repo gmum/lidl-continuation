@@ -10,7 +10,8 @@ def make_experiment_argument_parser():
         "--algorithm",
         default="mle",
         type=str,
-        choices=["mle", "mle-inv", "gm", "rqnsf", "maf", "corrdim"] + list(skdim_algorithms.keys()),
+        choices=["mle", "mle-inv", "gm", "rqnsf", "maf", "corrdim"]
+        + list(skdim_algorithms.keys()),
         help="name of the algorithm",
     )
     parser.add_argument(
@@ -24,7 +25,7 @@ def make_experiment_argument_parser():
         "--covariance",
         default="diag",
         type=str,
-        choices=['spherical', 'tied', 'diag', 'full'],
+        choices=["spherical", "tied", "diag", "full"],
         help="covariance_type for GaussianMixture",
     )
     parser.add_argument(
@@ -93,72 +94,42 @@ def make_experiment_argument_parser():
     )
 
     parser.add_argument(
-        "--layers",
-        default="4",
-        type=int,
-        help="number of layers in maf/reqnsf"
+        "--layers", default="4", type=int, help="number of layers in maf/reqnsf"
     )
 
     parser.add_argument(
         "--size",
         default="1000",
         type=int,
-        help="number of samples in each dataset (number of rows)"
+        help="number of samples in each dataset (number of rows)",
     )
 
     parser.add_argument(
-        "--seed",
-        default="0",
-        type=int,
-        help="seed for each dataset generator"
+        "--seed", default="0", type=int, help="seed for each dataset generator"
     )
 
     parser.add_argument(
-        "--hidden",
-        default="5",
-        type=float,
-        help="number of hidden features in maf"
+        "--hidden", default="5", type=float, help="number of hidden features in maf"
+    )
+
+    parser.add_argument("--lr", default=0.0001, type=float, help="learning rate")
+
+    parser.add_argument("--epochs", default=10000, type=int, help="number of epochs")
+
+    parser.add_argument("--bs", default=256, type=int, help="batch_size")
+
+    parser.add_argument(
+        "--blocks", default=5, type=int, help="number of blocks in rqnsf"
     )
 
     parser.add_argument(
-        "--lr",
-        default=0.0001,
-        type=float,
-        help="learning rate"
-    )
-
-    parser.add_argument(
-        "--epochs",
-        default=10000,
-        type=int,
-        help="number of epochs"
-    )
-
-    parser.add_argument(
-        "--bs",
-        default=256,
-        type=int,
-        help="batch_size"
-    )
-
-    parser.add_argument(
-        "--blocks",
-        default=5,
-        type=int,
-        help="number of blocks in rqnsf"
-    )
-
-    parser.add_argument(
-        "--json_params",
-        default=None,
-        type=str,
-        help="arguments to skdim"
+        "--json_params", default=None, type=str, help="arguments to skdim"
     )
 
     parser.add_argument(
         "--gm_max_components",
         default=200,
         type=int,
-        help="number of components in gaussian mixture"
+        help="number of components in gaussian mixture",
     )
     return parser
