@@ -10,7 +10,7 @@ def make_experiment_argument_parser():
         "--algorithm",
         default="mle",
         type=str,
-        choices=["mle", "mle-inv", "gm", "rqnsf", "maf", "corrdim"]
+        choices=["mle", "mle-inv", "cnf", "gm", "rqnsf", "maf", "corrdim"]
         + list(skdim_algorithms.keys()),
         help="name of the algorithm",
     )

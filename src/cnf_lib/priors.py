@@ -181,6 +181,63 @@ class Normal(nn.Module):
         return tmpstr
 
 
+class GaussianMixture(nn.Module):
+    """Samples from a Gaussian Mixture."""
+
+    def __init__(self, dims: int):
+        super(GaussianMixture, self).__init__()
+        self.dims = dims
+        self.log_normalization = - self.dims / 2 * math.log(2 * torch.pi)
+        self.multiplier = 8
+
+        self.alpha = nn.Parameter(torch.ones((dims + 1) * self.multiplier))
+        # self.mu = nn.Parameter(torch.randn((dims + 1) * self.multiplier, dims))
+
+        cube_items = math.ceil(((dims + 1) * self.multiplier) ** (1 / dims))
+        side_len = 1 # cube_items - 1
+        space = (torch.linspace(-side_len / 2, side_len / 2, steps=cube_items),) * dims
+        grid = torch.meshgrid(*space)
+        mu = torch.stack(grid, dim=-1).reshape(-1, dims)
+        idx = torch.randperm(len(mu))[:(dims + 1) * self.multiplier]
+        self.mu = nn.Parameter(mu[idx])
+
+        # self.mu = nn.Parameter(torch.rand((dims + 1) * self.multiplier, dims) * 10)
+        self.cov = torch.Tensor([1 / 10] * (dims + 1) * self.multiplier * dims).reshape((dims + 1) * self.multiplier, dims)
+
+    # def sample(self, size=None, params=None):
+    #     std_z = Variable(torch.randn(mu.size()).type_as(mu.data))
+    #     sample = std_z * torch.exp(logsigma) + mu
+    #     return sample
+
+    def log_density(self, sample, eps=1.0, params=None, raw=False):
+        var = eps ** 2
+        weights = nn.functional.softmax(self.alpha, dim=0)
+
+        results = []
+        for i, (mu, cov, w) in enumerate(zip(self.mu, self.cov, weights)):
+            i = int(i // self.multiplier)
+            cov = cov.clone()
+            cov[:i] *= var
+            det_cov = var ** i * (1/10) ** (self.dims - i)
+
+            point = sample - mu
+            exp_term = torch.exp(-0.5 * (point ** 2 / cov).sum(1, keepdim=True))
+            sig_term = det_cov ** -0.5
+            results.append((sig_term * exp_term) * w)
+
+        results = torch.cat(results, dim=1)
+        if raw:
+            return results
+        density = results.sum(1, keepdim=True)
+        return torch.log(density) + self.log_normalization
+
+    def __repr__(self):
+        tmpstr = self.__class__.__name__ + f"\n\t{torch.round(self.mu.data, decimals=2)}\n\t{torch.round(self.alpha.data, decimals=2)}"
+        tmpstr += f" ~ {torch.round(nn.functional.softmax(self.alpha).data, decimals=2)}"
+
+        return tmpstr
+
+
 class Laplace(nn.Module):
     """Samples from a Laplace distribution using the reparameterization trick."""
 

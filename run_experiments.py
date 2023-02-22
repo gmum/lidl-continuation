@@ -2,7 +2,7 @@ import json
 import time
 from pathlib import Path
 
-from dim_estimators import mle_skl, corr_dim, LIDL, mle_inv
+from dim_estimators import mle_skl, corr_dim, LIDL, mle_inv, CNF
 import numpy as np
 import neptune.new as neptune
 import matplotlib.pyplot as plt
@@ -28,8 +28,8 @@ argname = "_".join(
 
 report_folder = Path("./results")
 report_folder.mkdir(exist_ok=True, parents=True)
-report_filename = report_folder.joinpath(f"report_dim_estimate_{argname}.csv")
-figure_filename = report_folder.joinpath(f"figures/report_dim_estimate_{argname}.png")
+report_filename = report_folder.joinpath(f"report`{argname}.csv")
+figure_filename = report_folder.joinpath(f"figures/report`{argname}.png")
 print(report_filename)
 
 if args.deltas is not None:
@@ -69,6 +69,7 @@ data = inputs[args.dataset](size=args.size, seed=args.seed)
 # data = normalize(data)
 # print(args)
 
+density = None
 run = None
 if not (args.neptune_name is None or args.neptune_token is None):
     run = neptune.init(
@@ -80,7 +81,9 @@ if not (args.neptune_name is None or args.neptune_token is None):
             "likelihood_estimators.py",
             "run_experiments.py",
             "s3.sh",
+            "src/cnf_lib/priors.py"
         ],
+        tags=["tag"]
     )
     for key, value in vars(args).items():
         run[key] = value
@@ -122,7 +125,18 @@ elif args.algorithm == "gm":
 elif args.algorithm == "corrdim":
     print("corrdim", file=report_file)
     results = corr_dim(data)
-
+elif args.algorithm == "cnf":
+    maf = CNF(
+        device=args.device,
+        dims=data.shape[1],
+        lr=args.lr,
+        num_layers=args.layers,
+        run=run,
+        epochs=args.epochs,
+        bs=args.bs,
+    )
+    print("cnf", file=report_file)
+    results, density = maf(train_dataset=data, test=data)
 elif args.algorithm == "maf":
     maf = LIDL(
         model_type="maf",
@@ -162,6 +176,27 @@ elif args.algorithm == "mle-inv":
     print(f"mle-inv:k={args.k}", file=report_file)
     results = mle_inv(data, k=args.k)
 
+if data.shape[1] in {2, 3}:
+    assert len(data.shape) == 2
+    print("Saving figure...")
+    figure_filename.parent.mkdir(exist_ok=True, parents=True)
+
+    fig, ax = plt.subplots(2, 1, figsize=(5, 10))
+    ax[0].set_title('Density')
+    mappable = ax[0].scatter(data[:, 0], data[:, 1], c=density, alpha=0.5, vmin=0)
+    plt.colorbar(mappable, shrink=0.9)
+    ax[0].axis("scaled")
+
+    ax[1].set_title('Dimensionality')
+    mappable = ax[1].scatter(data[:, 0], data[:, 1], c=results, alpha=0.5, vmin=0)
+    plt.colorbar(mappable, shrink=0.9)
+    ax[1].axis("scaled")
+    plt.savefig(figure_filename, facecolor="white")
+    # mappable = plt.scatter(data[:, 0], data[:, 1], c=density, alpha=0.5, vmin=0)
+    # plt.colorbar(mappable, shrink=0.9)
+    # plt.axis("scaled")
+    # plt.savefig(figure_filename, facecolor="white")
+    run["density"].upload(str(figure_filename))
 
 if not (args.neptune_name is None or args.neptune_token is None):
     for lid in results:
@@ -180,15 +215,4 @@ if not (args.neptune_name is None or args.neptune_token is None):
     run["running_time"] = end_time - start_time
     run.stop()
 
-
 print("\n".join(map(str, results)), file=report_file)
-
-if data.shape[1] in {2, 3}:
-    assert len(data.shape) == 2
-    print("Saving figure...")
-    figure_filename.parent.mkdir(exist_ok=True, parents=True)
-
-    mappable = plt.scatter(data[:, 0], data[:, 1], c=results, alpha=0.5, vmin=0)
-    plt.colorbar(mappable, shrink=0.9)
-    plt.axis("scaled")
-    plt.savefig(figure_filename, facecolor="white")
